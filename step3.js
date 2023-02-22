@@ -4,7 +4,6 @@ const { NONAME } = require('dns');
 
 
 function parseCommandLine() {
-    //if argv[2] == '--out' then proceed as writing to file 
     if (process.argv[2] == '--out') {
         return {
             out:true,
@@ -17,10 +16,22 @@ function parseCommandLine() {
         outFile:undefined,
         inFile:process.argv[2]
         }
-    //otherwise proceed as in step2.js
 }
 
-const cmdOptions = parseCommandLine();
+
+
+function handleOutput(data, out) {
+    if (out) {
+        fs.writeFile(out, data, 'utf8', (err) => {
+            if (err) {
+                console.log('ERROR WRITING DATA:\n',err);
+                process.exit(1);
+            }
+        });
+    } else {
+        console.log(data);
+    }
+}
 
 function cat(path) {
     fs.readFile(path, 'utf8', (err, data) => {
@@ -28,15 +39,16 @@ function cat(path) {
             console.log("ERROR READING FILE\n", err);
             process.exit(1);
         } else {
-            if (cmdOptions.out) {
-                fs.writeFile(cmdOptions.outFile, data, (err) => {
-                    if (err) {
-                        console.log("ERROR WRITING FILE:\n",err);
-                    }
-                });
-            } else {
-            console.log(data);
-            }
+            handleOutput(data, cmdOptions.outFile);
+            // if (cmdOptions.out) {
+            //     fs.writeFile(cmdOptions.outFile, data, (err) => {
+            //         if (err) {
+            //             console.log("ERROR WRITING FILE:\n",err);
+            //         }
+            //     });
+            // } else {
+            // console.log(data);
+            // }
         }
     })
 }
@@ -44,25 +56,27 @@ function cat(path) {
 async function webCat(url) {
     try {
         const {data:webData} = await axios.get(url);
-        if (cmdOptions.out) {
-            fs.writeFile(cmdOptions.outFile, webData, (err) => {
-                if (err) {
-                    console.log("ERROR WRITING HTTP FILE:\n",err);
-                }
-            });
-        } else {
-            console.log(webData);
-        }
+        handleOutput(webData, cmdOptions.outFile)
+        // if (cmdOptions.out) {
+        //     fs.writeFile(cmdOptions.outFile, webData, (err) => {
+        //         if (err) {
+        //             console.log("ERROR WRITING HTTP FILE:\n",err);
+        //         }
+        //     });
+        // } else {
+        //     console.log(webData);
+        // }
     } catch(err) {
         console.log("WEB ERROR\n",err);
         process.kill(1);
     }
-
 }
 
-let thePath = cmdOptions.inFile;
-if (thePath.indexOf('http') == 0) {
-    webCat(thePath);
+
+
+const cmdOptions = parseCommandLine();
+if (cmdOptions.inFile.indexOf('http') == 0) {
+    webCat(cmdOptions.inFile);
 } else {
-    cat(thePath);
+    cat(cmdOptions.inFile);
 }
