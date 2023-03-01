@@ -23,6 +23,16 @@ async function webCat(url) {
 
 }
 
+if (process.argv.length !== 3) {
+    console.log('Error in command line.');
+    console.log('To run, use:   node step2.js [path]');
+    console.log('[path] can be either a file on your computer or an http address');
+    console.log('Example:   node step2.js my_info.txt');
+    process.exit(1);
+}
+
+const thePath = process.argv[2];
+
 
 if (thePath.indexOf('http') == 0) {
     webCat(thePath);
